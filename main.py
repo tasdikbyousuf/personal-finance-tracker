@@ -1,74 +1,51 @@
-import pandas as pd
-
-def add_transaction(filename, transaction):
-    try:
-        df = pd.read_excel(filename)
-    except FileNotFoundError:
-        df = pd.DataFrame(columns=['Description', 'Expense', 'Income'])
-
-    # Classify transaction type (Expense or Income)
-    if transaction['Amount'] < 0:
-        df = df._append({'Description': transaction['Description'], 'Expense': -transaction['Amount'], 'Income': 0}, ignore_index=True)
-    else:
-        df = df._append({'Description': transaction['Description'], 'Expense': 0, 'Income': transaction['Amount']}, ignore_index=True)
-
-    # Calculate and add net balance
-    df['Net Balance'] = df['Income'].cumsum() - df['Expense'].cumsum()
-
-    df.to_excel(filename, index=False)
-    print("Transaction added successfully.")
-
-def display_transactions(filename):
-    try:
-        df = pd.read_excel(filename)
-    except FileNotFoundError:
-        print("No transactions found.")
-        return 0.0
-
-    print(df.to_string(index=False))
-
-    # Separate expenses and incomes
-    expenses = df[df['Expense'] > 0]
-    incomes = df[df['Income'] > 0]
-
-    # Display expenses
-    if not expenses.empty:
-        print("\nExpenses:")
-        print(expenses[['Description', 'Expense', 'Net Balance']].to_string(index=False))
-
-    # Display incomes
-    if not incomes.empty:
-        print("\nIncomes:")
-        print(incomes[['Description', 'Income', 'Net Balance']].to_string(index=False))
-
-    # Calculate and display net balance
-    net_balance = df['Net Balance'].iloc[-1]
-    #print(f'\nNet Balance: {net_balance}')
-
-    return net_balance
+def add_expense(expenses, amount, category):
+    expenses.append({'amount': amount, 'category': category})
+    
+def print_expenses(expenses):
+    for expense in expenses:
+        print(f'Amount: {expense["amount"]}, Category: {expense["category"]}')
+    
+def total_expenses(expenses):
+    return sum(map(lambda expense: expense['amount'], expenses))
+    
+def filter_expenses_by_category(expenses, category):
+    return filter(lambda expense: expense['category'] == category, expenses)
+    
 
 def main():
-    filename = 'transactions_with_separate_columns.xlsx'
-
+    expenses = []
     while True:
-        print("1. Add Expense/Income")
-        print("2. View Transactions")
-        print("3. Exit")
-        choice = input("Enter your choice: ")
+        print('\nExpense Tracker')
+        print('1. Add an expense')
+        print('2. List all expenses')
+        print('3. Show total expenses')
+        print('4. Filter expenses by category')
+        print('5. Exit')
+        
+        choice = input('Enter your choice: ')
 
         if choice == '1':
-            description = input("Enter Description: ")
-            amount = float(input("Enter Amount: "))
-            transaction = {'Description': description, 'Amount': amount}
-            add_transaction(filename, transaction)
-        elif choice == '2':
-            net_balance = display_transactions(filename)
-            print(f'Net Balance: {net_balance}')
-        elif choice == '3':
-            print("Exiting the program.")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+            amount = float(input('Enter amount: '))
+            category = input('Enter category: ')
+            add_expense(expenses, amount, category)
 
-if __name__ == "__main__":
+        elif choice == '2':
+            print('\nAll Expenses:')
+            print_expenses(expenses)
+
+        elif choice == '3':
+            print('\nTotal Expenses: ', total_expenses(expenses))
+
+        elif choice == '4':
+            category = input('Enter category to filter: ')
+            print(f'\nExpenses for {category}:')
+            expenses_from_category = filter_expenses_by_category(expenses, category)
+            print_expenses(expenses_from_category)
+
+        elif choice == '5':
+            print('Exiting the program.')
+            break
+
+
+if __name__ == '__main__':
     main()
